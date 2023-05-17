@@ -4,7 +4,7 @@
 
 ### Personal Chat Room or Workspace to share resources and hangout with friends.
 
-### https://chatifynew.vercel.app/
+### https://aurorachat-536d0.web.app/
 
 <div align="center">
   <img alt="Demo" src="./Assets/chatify.png" />
