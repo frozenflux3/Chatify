@@ -75,7 +75,6 @@ function Chat() {
 	const [emojiBtn, setEmojiBtn] = useState(false);
 	const [modalState, setModalState] = useState(false);
 	const [file, setFileName] = useState(null);
-	const [showAuthPanel, setShowAuthPanel] = useState(true);
 
 	useEffect(() => {
 		if (params.id) {
@@ -87,7 +86,6 @@ function Chat() {
 						isPrivate: snapshot.data().isPrivate,
 						cPassword: snapshot.data().cPassword,
 					});
-					setShowAuthPanel(snapshot.data().isPrivate);
 				});
 
 			db.collection("channels")
@@ -253,6 +251,12 @@ function Chat() {
 							value={userNewMsg}
 							onChange={(e) => {
 								setUserNewMsg(e.target.value);
+							}}
+							onKeyDown={(e) => {
+								if (e.keyCode === 13 && e.ctrlKey) {
+									e.preventDefault();
+									sendMsg(e);
+								}
 							}}
 						/>
 						<IconButton type="submit" component="button">
