@@ -14,24 +14,25 @@
 
 ## Build With
 
-- `React.js`
-- `Firebase`
-- `Material UI`
-- `React Icons`
+-   `React.js`
+-   `Firebase`
+-   `Material UI`
+-   `React Icons`
 
 ## Features:
 
-- Easy SignIn with Google
-- Create Rooms
-- Realtime group messaging with image sharing
-- Supports Emoji
-- Reaction on messages
+-   Easy SignIn with Google
+-   Create Public/Private Rooms
+-   Authenticate with password for Private Rooms
+-   Realtime group messaging with image sharing
+-   Supports Emoji
+-   Reaction on messages
 
 ## Installation and Usage
 
 ### Clone this repository
 
-`git clone https://github.com/soumyajit4419/Chatify.git` <br/>
+`git clone https://github.com/TechAurora518/Chatify.git` <br/>
 `cd chatify`
 
 ### Install Dependencies

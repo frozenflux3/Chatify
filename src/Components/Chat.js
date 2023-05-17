@@ -14,224 +14,255 @@ import { GrEmoji } from "react-icons/gr";
 import { Picker } from "emoji-mart";
 import { RiImageAddLine } from "react-icons/ri";
 import FileUpload from "./FileUpload";
+import CheckAuth from "./CheckAuth";
+import { getHashedPassword } from "./utils";
 import "emoji-mart/css/emoji-mart.css";
 
 const useStyles = makeStyles((theme) => ({
-  root: {
-    flexGrow: 1,
-  },
-  chat: {
-    position: "relative",
-    height: "calc(100vh - 200px)",
-    paddingLeft: "10px",
-    paddingBottom: "5px",
-    paddingTop: "5px",
-  },
-  footer: {
-    paddingRight: "15px",
-    paddingLeft: "15px",
-    paddingTop: "10px",
-  },
-  message: {
-    width: "100%",
-    color: "white",
-  },
-  roomName: {
-    border: "1px solid #0000004a",
-    borderLeft: 0,
-    borderRight: 0,
-    padding: "15px",
-    display: "flex",
-    color: "#e5e5e5",
-  },
-  roomNameText: {
-    marginBlockEnd: 0,
-    marginBlockStart: 0,
-    paddingLeft: "5px",
-  },
-  iconDesign: {
-    fontSize: "1.5em",
-    color: "#e5e5e5",
-  },
-  footerContent: {
-    display: "flex",
-    backgroundColor: "#303753",
-    borderRadius: "5px",
-    alignItems: "center",
-  },
-  inputFile: {
-    display: "none",
-  },
+	root: {
+		flexGrow: 1,
+	},
+	chat: {
+		position: "relative",
+		height: "calc(100vh - 200px)",
+		paddingLeft: "10px",
+		paddingBottom: "5px",
+		paddingTop: "5px",
+	},
+	footer: {
+		paddingRight: "15px",
+		paddingLeft: "15px",
+		paddingTop: "10px",
+	},
+	message: {
+		width: "100%",
+		color: "white",
+	},
+	roomName: {
+		border: "1px solid #0000004a",
+		borderLeft: 0,
+		borderRight: 0,
+		padding: "15px",
+		display: "flex",
+		color: "#e5e5e5",
+	},
+	roomNameText: {
+		marginBlockEnd: 0,
+		marginBlockStart: 0,
+		paddingLeft: "5px",
+	},
+	iconDesign: {
+		fontSize: "1.5em",
+		color: "#e5e5e5",
+	},
+	footerContent: {
+		display: "flex",
+		backgroundColor: "#303753",
+		borderRadius: "5px",
+		alignItems: "center",
+	},
+	inputFile: {
+		display: "none",
+	},
 }));
 
 function Chat() {
-  const classes = useStyles();
-  const params = useParams();
-  const [allMessages, setAllMessages] = useState([]);
-  const [channelName, setChannelName] = useState("");
-  const [userNewMsg, setUserNewMsg] = useState("");
-  const [emojiBtn, setEmojiBtn] = useState(false);
-  const [modalState, setModalState] = useState(false);
-  const [file, setFileName] = useState(null);
+	const classes = useStyles();
+	const params = useParams();
+	const [allMessages, setAllMessages] = useState([]);
+	const [channelData, setchannelData] = useState({});
+	const [userNewMsg, setUserNewMsg] = useState("");
+	const [emojiBtn, setEmojiBtn] = useState(false);
+	const [modalState, setModalState] = useState(false);
+	const [file, setFileName] = useState(null);
+	const [showAuthPanel, setShowAuthPanel] = useState(true);
 
-  useEffect(() => {
-    if (params.id) {
-      db.collection("channels")
-        .doc(params.id)
-        .onSnapshot((snapshot) => {
-          setChannelName(snapshot.data().channelName);
-        });
+	useEffect(() => {
+		if (params.id) {
+			db.collection("channels")
+				.doc(params.id)
+				.onSnapshot((snapshot) => {
+					setchannelData({
+						channelName: snapshot.data().channelName,
+						isPrivate: snapshot.data().isPrivate,
+						cPassword: snapshot.data().cPassword,
+					});
+					setShowAuthPanel(snapshot.data().isPrivate);
+				});
 
-      db.collection("channels")
-        .doc(params.id)
-        .collection("messages")
-        .orderBy("timestamp", "asc")
-        .onSnapshot((snapshot) => {
-          setAllMessages(
-            snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() }))
-          );
-        });
-    }
-  }, [params]);
+			db.collection("channels")
+				.doc(params.id)
+				.collection("messages")
+				.orderBy("timestamp", "asc")
+				.onSnapshot((snapshot) => {
+					setAllMessages(
+						snapshot.docs.map((doc) => ({
+							id: doc.id,
+							data: doc.data(),
+						}))
+					);
+				});
+		}
+	}, [params]);
 
-  const sendMsg = (e) => {
-    e.preventDefault();
-    if (userNewMsg && params.id) {
-      const userData = JSON.parse(localStorage.getItem("userDetails"));
+	const checkPassword = (e) => {
+		return getHashedPassword(e) === channelData.cPassword;
+	};
 
-      if (userData) {
-        const displayName = userData.displayName;
-        const imgUrl = userData.photoURL;
-        const uid = userData.uid;
-        const likeCount = 0;
-        const likes = {};
-        const fireCount = 0;
-        const fire = {};
-        const heartCount = 0;
-        const heart = {};
-        const postImg = null;
-        const obj = {
-          text: userNewMsg,
-          timestamp: firebase.firestore.Timestamp.now(),
-          userImg: imgUrl,
-          userName: displayName,
-          uid: uid,
-          likeCount: likeCount,
-          likes: likes,
-          fireCount: fireCount,
-          fire: fire,
-          heartCount: heartCount,
-          heart: heart,
-          postImg: postImg,
-        };
+	const sendMsg = (e) => {
+		e.preventDefault();
+		if (userNewMsg && params.id) {
+			const userData = JSON.parse(localStorage.getItem("userDetails"));
 
-        db.collection("channels")
-          .doc(params.id)
-          .collection("messages")
-          .add(obj)
-          .then((res) => {
-            console.log("message sent");
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      }
+			if (userData) {
+				const displayName = userData.displayName;
+				const imgUrl = userData.photoURL;
+				const uid = userData.uid;
+				const likeCount = 0;
+				const likes = {};
+				const fireCount = 0;
+				const fire = {};
+				const heartCount = 0;
+				const heart = {};
+				const postImg = null;
+				const obj = {
+					text: userNewMsg,
+					timestamp: firebase.firestore.Timestamp.now(),
+					userImg: imgUrl,
+					userName: displayName,
+					uid: uid,
+					likeCount: likeCount,
+					likes: likes,
+					fireCount: fireCount,
+					fire: fire,
+					heartCount: heartCount,
+					heart: heart,
+					postImg: postImg,
+				};
 
-      setUserNewMsg("");
-      setEmojiBtn(false);
-    }
-  };
+				db.collection("channels")
+					.doc(params.id)
+					.collection("messages")
+					.add(obj)
+					.then((res) => {
+						console.log("message sent");
+					})
+					.catch((err) => {
+						console.log(err);
+					});
+			}
 
-  const addEmoji = (e) => {
-    setUserNewMsg(userNewMsg + e.native);
-  };
+			setUserNewMsg("");
+			setEmojiBtn(false);
+		}
+	};
 
-  const openModal = () => {
-    setModalState(!modalState);
-  };
+	const addEmoji = (e) => {
+		setUserNewMsg(userNewMsg + e.native);
+	};
 
-  const handelFileUpload = (e) => {
-    e.preventDefault();
-    if (e.target.files[0]) {
-      setFileName(e.target.files[0]);
-      openModal();
-    }
-    e.target.value = null;
-  };
+	const openModal = () => {
+		setModalState(!modalState);
+	};
 
-  return (
-    <div className={classes.root}>
-      {modalState ? <FileUpload setState={openModal} file={file} /> : null}
-      <Grid item xs={12} className={classes.roomName}>
-        <BiHash className={classes.iconDesign} />
-        <h3 className={classes.roomNameText}>{channelName}</h3>
-      </Grid>
-      <Grid item xs={12} className={classes.chat}>
-        <ScrollableFeed>
-          {allMessages.map((message) => (
-            <Messages
-              key={message.id}
-              values={message.data}
-              msgId={message.id}
-            />
-          ))}
-        </ScrollableFeed>
-      </Grid>
-      <div className={classes.footer}>
-        <Grid item xs={12} className={classes.footerContent}>
-          <input
-            accept="image/*"
-            className={classes.inputFile}
-            id="icon-button-file"
-            type="file"
-            onChange={(e) => handelFileUpload(e)}
-          />
-          <label htmlFor="icon-button-file">
-            <IconButton
-              color="primary"
-              aria-label="upload picture"
-              component="span"
-            >
-              <RiImageAddLine style={{ color: "#b9bbbe" }} />
-            </IconButton>
-          </label>
+	const handelFileUpload = (e) => {
+		e.preventDefault();
+		if (e.target.files[0]) {
+			setFileName(e.target.files[0]);
+			openModal();
+		}
+		e.target.value = null;
+	};
 
-          <IconButton
-            color="primary"
-            component="button"
-            onClick={() => setEmojiBtn(!emojiBtn)}
-          >
-            <GrEmoji style={{ color: "#b9bbbe" }} />
-          </IconButton>
-          {emojiBtn ? <Picker onSelect={addEmoji} theme="dark" /> : null}
+	return (
+		<div className={classes.root}>
+			{channelData.isPrivate ? (
+				<CheckAuth
+					checkPassword={checkPassword}
+					changeAuthState={(stat) => {
+						setchannelData((e) => ({ ...e, isPrivate: stat }));
+					}}
+				/>
+			) : null}
+			{modalState ? (
+				<FileUpload setState={openModal} file={file} />
+			) : null}
+			<Grid item xs={12} className={classes.roomName}>
+				<BiHash className={classes.iconDesign} />
+				<h3 className={classes.roomNameText}>
+					{channelData["channelName"]}
+				</h3>
+			</Grid>
+			<Grid item xs={12} className={classes.chat}>
+				{channelData.isPrivate ? null : (
+					<ScrollableFeed>
+						{allMessages.map((message) => (
+							<Messages
+								key={message.id}
+								values={message.data}
+								msgId={message.id}
+							/>
+						))}
+					</ScrollableFeed>
+				)}
+			</Grid>
+			<div className={classes.footer}>
+				<Grid item xs={12} className={classes.footerContent}>
+					<input
+						accept="image/*"
+						className={classes.inputFile}
+						id="icon-button-file"
+						type="file"
+						onChange={(e) => handelFileUpload(e)}
+					/>
+					<label htmlFor="icon-button-file">
+						<IconButton
+							color="primary"
+							aria-label="upload picture"
+							component="span"
+						>
+							<RiImageAddLine style={{ color: "#b9bbbe" }} />
+						</IconButton>
+					</label>
 
-          <form
-            autoComplete="off"
-            style={{ width: "100%", display: "flex" }}
-            onSubmit={(e) => sendMsg(e)}
-          >
-            <TextField
-              className={classes.message}
-              required
-              id="outlined-basic"
-              label="Enter Message"
-              variant="outlined"
-              multiline
-              rows={1}
-              rowsMax={2}
-              value={userNewMsg}
-              onChange={(e) => {
-                setUserNewMsg(e.target.value);
-              }}
-            />
-            <IconButton type="submit" component="button">
-              <FiSend style={{ color: "#b9bbbe" }} />
-            </IconButton>
-          </form>
-        </Grid>
-      </div>
-    </div>
-  );
+					<IconButton
+						color="primary"
+						component="button"
+						onClick={() => setEmojiBtn(!emojiBtn)}
+					>
+						<GrEmoji style={{ color: "#b9bbbe" }} />
+					</IconButton>
+					{emojiBtn ? (
+						<Picker onSelect={addEmoji} theme="dark" />
+					) : null}
+
+					<form
+						autoComplete="off"
+						style={{ width: "100%", display: "flex" }}
+						onSubmit={(e) => sendMsg(e)}
+					>
+						<TextField
+							className={classes.message}
+							required
+							id="outlined-basic"
+							label="Enter Message"
+							variant="outlined"
+							multiline
+							rows={1}
+							rowsMax={2}
+							value={userNewMsg}
+							onChange={(e) => {
+								setUserNewMsg(e.target.value);
+							}}
+						/>
+						<IconButton type="submit" component="button">
+							<FiSend style={{ color: "#b9bbbe" }} />
+						</IconButton>
+					</form>
+				</Grid>
+			</div>
+		</div>
+	);
 }
 
 export default Chat;

@@ -1,0 +1,17 @@
+# top-most EditorConfig file
+root = true
+ # indentation
+[*]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+ # end of line
+[*]
+end_of_line = lf
+insert_final_newline = true
+ # charset
+[*]
+charset = utf-8
+ # trim trailing whitespace
+[*.{js,jsx,ts,tsx,html,css,scss,yml,json,md}]
+trim_trailing_whitespace = true
